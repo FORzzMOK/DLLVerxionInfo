@@ -10,15 +10,22 @@ namespace DLLVerxionInfo
     {
         static void Main(string[] args)
         {
-            DirectoryInfo directoryInfo = new DirectoryInfo(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+            var directoryInfo = new DirectoryInfo(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+            var fileVersionInfoType = typeof(FileVersionInfo);
+            var properties = fileVersionInfoType.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
+
             foreach (var file in directoryInfo.GetFiles())
             {
                 if (Path.GetExtension(file.FullName) == ".dll" || Path.GetExtension(file.FullName) == ".exe")
                 {
-                    var notepadFileInfo = FileVersionInfo.GetVersionInfo(file.Name);
-                    Console.WriteLine(
-                        $"{nameof(notepadFileInfo.InternalName)}={notepadFileInfo.InternalName}\n" +
-                        $"{nameof(notepadFileInfo.FileVersion)}={notepadFileInfo.FileVersion}\n");
+                    foreach (var property in properties)
+                    {
+                        var fileVersionInfo = FileVersionInfo.GetVersionInfo(file.Name);
+                        var name = fileVersionInfoType.GetProperty(property.Name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
+                        var value = name?.GetValue(fileVersionInfo);
+                        Console.WriteLine($"{name.Name}={value}");
+                    }
+                    Console.WriteLine();
                 }
             }
             Console.WriteLine("Press any button to close...");
